@@ -3,6 +3,13 @@ import numpy
 import random
 import PyPluMA
 
+def is_number(s):
+    try:
+        float(s)
+        return True
+    except ValueError:
+        return False
+
 class CSVScreenPlugin:
    def input(self, filename):
       self.txtfile = open(filename, 'r')
@@ -17,6 +24,7 @@ class CSVScreenPlugin:
       self.newlines = []
       column = self.parameters['column']
       csvfile = open(self.parameters['csvfile'], 'r')
+      criteria = self.parameters['criteria']
       self.header = csvfile.readline().strip() # First line has the target column
       headercontents = self.header.split(',')
       if (headercontents.count(column) == 0):
@@ -27,7 +35,7 @@ class CSVScreenPlugin:
        for line in csvfile:
          line = line.strip()
          contents = line.split(',')
-         if (float(contents[targetindex]) != 0):
+         if (is_number(contents[targetindex]) and (criteria == "nonzero" and float(contents[targetindex]) != 0) or (criteria == "zero" and float(contents[targetindex]) == 0)):
             self.newlines.append(line)
 
 
