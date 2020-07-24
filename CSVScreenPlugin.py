@@ -7,7 +7,7 @@ def is_number(s):
     try:
         float(s)
         return True
-    except ValueError:
+    except:
         return False
 
 class CSVScreenPlugin:
@@ -27,16 +27,54 @@ class CSVScreenPlugin:
       criteria = self.parameters['criteria']
       self.header = csvfile.readline().strip() # First line has the target column
       headercontents = self.header.split(',')
-      if (headercontents.count(column) == 0):
+      tocheck = []
+      if (column[0] == '\"'):  # Take out quotes
+         column = column[1:len(column)-1]
+      for i in range(len(headercontents)):
+         if (headercontents[i] != '\"\"' and headercontents[i][0] == '\"'):
+            headercontents[i] =headercontents[i][1:len(headercontents[i])-1]
+         #if (headercontents[i][0] == 'V'):
+         #   print(headercontents[i].startswith(column))
+         #   print(headercontents[len(column)])
+         #   print(is_number(headercontents[len(column)+1:]))
+         if (headercontents[i] == column):
+           print(headercontents[i]+"\n")
+           tocheck.append(i)
+         elif (headercontents[i].startswith(column) and   # For cases where you have more than one strain
+               headercontents[i][len(column)] == '-' and
+               is_number(headercontents[i][len(column)+1:])):
+           print(headercontents[i]+"\n")
+           tocheck.append(i)
+      #if (headercontents.count(column) == 0):
+      if (len(tocheck) == 0):
          PyPluMA.log("[CSVScreen] WARNING: TARGET COLUMN NOT FOUND")
       else:
-       targetindex = headercontents.index(column)
-       self.newlines = []
-       for line in csvfile:
-         line = line.strip()
-         contents = line.split(',')
-         if (is_number(contents[targetindex]) and (criteria == "nonzero" and float(contents[targetindex]) != 0) or (criteria == "zero" and float(contents[targetindex]) == 0)):
-            self.newlines.append(line)
+         self.newlines = []
+         for line in csvfile:
+           line = line.strip()
+           contents = line.split(',')
+           if (criteria == "nonzero"):  # Only one has to be nonzero to keep it
+              for targetindex in tocheck:
+                if (is_number(contents[targetindex]) and float(contents[targetindex]) != 0):
+                   self.newlines.append(line)
+                   break
+           else:  # All have to be zero to keep it
+              isZero = True
+              for targetindex in tocheck:
+                if (is_number(contents[targetindex]) and float(contents[targetindex]) != 0):
+                   isZero = False
+                   break
+              if (isZero):
+                 self.newlines.append(line)
+
+       #else: # All have to be zero to keep it
+       #targetindex = headercontents.index(column)
+       #self.newlines = []
+       #for line in csvfile:
+       #  line = line.strip()
+       #  contents = line.split(',')
+       #  if (is_number(contents[targetindex]) and (criteria == "nonzero" and float(contents[targetindex]) != 0) or (criteria == "zero" and float(contents[targetindex]) == 0)):
+       #     self.newlines.append(line)
 
 
    def output(self, filename):
