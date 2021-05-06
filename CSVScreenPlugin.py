@@ -55,13 +55,18 @@ class CSVScreenPlugin:
            contents = line.split(',')
            if (criteria == "nonzero"):  # Only one has to be nonzero to keep it
               for targetindex in tocheck:
-                if (is_number(contents[targetindex]) and float(contents[targetindex]) != 0):
+                if (not is_number(contents[targetindex])):
+                    self.newlines.append(line)
+                elif (float(contents[targetindex]) != 0):
                    self.newlines.append(line)
                    break
            else:  # All have to be zero to keep it
               isZero = True
               for targetindex in tocheck:
-                if (is_number(contents[targetindex]) and float(contents[targetindex]) != 0):
+                if (not is_number(contents[targetindex])):
+                   isZero = False
+                   break
+                elif (is_number(contents[targetindex]) and float(contents[targetindex]) != 0):
                    isZero = False
                    break
               if (isZero):
